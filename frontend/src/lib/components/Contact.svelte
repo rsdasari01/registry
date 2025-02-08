@@ -2,14 +2,16 @@
     .contact {
         display: flex;
         flex-direction: row;
-        // border: 1px dotted red;
         gap: .5rem;
         background: none;
         border: none;
+        width: 100%;
         text-align: left;
+        padding: .5rem 0 .5rem 1rem;
+        font-family: 'Bagnard';
 
         &:hover {
-            background: darkblue;
+            background: #C7B291;
         }
 
         cursor: pointer;
@@ -41,19 +43,21 @@
 
 
 <script lang="ts">
-    let {name} = $props();
+    import type { Contact } from "$lib/contacts/Contact";
+
+    let { contact } : {contact : Contact} = $props();
 </script>
 
 <button class="contact">
     {#if true}
-        <img src="https://picsum.photos/512/512" alt="Image of {name}" width=64 height=64>
+        <img src="https://picsum.photos/512/512" alt="Image of {contact.name}" width=64 height=64>
     {/if}
     <div class="info">
-        <h3>{name}</h3>
+        <h3>{contact.name}</h3>
 
         <div class="tiny">
-            <p>Brother</p>
-            <p>IBM Corporation 2010 Best</p>
+            <p>{contact.relation}</p>
+            <p>{contact.employer}</p>
         </div>
 
     </div>
