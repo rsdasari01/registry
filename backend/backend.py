@@ -8,8 +8,6 @@ app = Flask(__name__)
 with open("users.json", "r") as openfile:
     users_list = json.load(openfile)
 
-users_list = {}
-
 class User:
     def __init__(self, username, password):
         self.username = username
@@ -33,11 +31,7 @@ class User:
     def view_contact(self, contact_uuid):
         if contact_uuid in self.contacts:
             contact = self.contacts[contact_uuid]
-            print(f"UUID: {contact_uuid}")
-            print(f"Name: {contact['name']}")
-            print(f"Phone: {contact['phone']}")
-            print(f"Email: {contact['email']}")
-            print(f"Address: {contact['address']}")
+            return contact
         else:
             print(f"Contact with UUID '{contact_uuid}' not found!")
 
@@ -63,25 +57,23 @@ def get_contacts(username):
     return jsonify(users_list[username].contacts)
 
 @app.route('/contacts/<string:name>', methods=['GET'])
-def get_contact(self, name):
-    contact = self.contacts.get(name)
+def get_contact(username, name):
+    contact = users_list[username].contacts.view(name)
     if contact:
         return jsonify(contact)
     return jsonify({"message": "Contact not found"}), 404
 
 @app.route('/contacts', methods=['POST'])
-def add_contact():
+def add_contact(username):
     data = request.json
     name = data.get("name")
-    if name in contacts:
-        return jsonify({"message": "Contact already exists"}), 400
-    contacts[name] = data
+    users_list[username].contacts[name] = data
     return jsonify({"message": "Contact added successfully"}), 201
 
 @app.route('/contacts/<string:name>', methods=['DELETE'])
-def delete_contact(name):
-    if name in contacts:
-        del contacts[name]
+def delete_contact(username,name):
+    if name in users_list[username].contacts:
+        del users_list[username].contacts[name]
         return jsonify({"message": "Contact deleted"}), 200
     return jsonify({"message": "Contact not found"}), 404
 
