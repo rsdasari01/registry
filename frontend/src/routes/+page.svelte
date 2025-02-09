@@ -5,6 +5,8 @@
     import { createNewContact, type Contact, type UUID } from "$lib/contacts/Contact";
     import ContactGraph from "$lib/components/ContactGraph.svelte";    
     import { onMount } from "svelte";
+    import ServerManager from "$lib/remote/ServerManager";
+    import { goto } from "$app/navigation";
 
     let viewingContact : Contact|null = $state(null);
     
@@ -18,6 +20,11 @@
     let Graph : typeof import("$lib/graph/Graph");
 
     onMount(async () => {
+
+        if (ServerManager.AUTH_TOKEN === "") {
+            goto("/login")
+        }
+
         Graph = await import ("$lib/graph/Graph");
     })
 

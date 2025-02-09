@@ -71,7 +71,7 @@ def login():
 @jwt_required()
 def get_contacts():
     username = get_jwt_identity()
-    return jsonify(users_list[username].contacts)
+    return jsonify(users_list[username].contacts), 200
 
 
 @app.route('/contacts/<string:contact_uuid>', methods=['GET'])

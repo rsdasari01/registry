@@ -4,6 +4,7 @@
     import { fade } from "svelte/transition";
     import ContactPreview from "./ContactPreview.svelte";
     import { onMount } from "svelte";
+    import ServerManager from "$lib/remote/ServerManager";
 
     const {contact, changeContact, Graph} : {contact : Contact, changeContact : CallableFunction, Graph? : typeof import("$lib/graph/Graph")} = $props();
 
@@ -15,6 +16,7 @@
         if (!editable) {
             // Save changes to contact
             contacts.set(contact.uuid, contact);
+            ServerManager.updateContact(contact);
             Graph?.updateContact(contact);
         }
     })
