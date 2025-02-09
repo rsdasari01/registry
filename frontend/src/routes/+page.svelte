@@ -1,10 +1,16 @@
 <script lang="ts">
     import ContactList from "$lib/components/ContactList.svelte";
     import ContactProfile from "$lib/components/ContactProfile.svelte";
+    import contacts from "$lib/contacts/Contacts";
     import type { Contact } from "$lib/contacts/Contact";
 
-    let searchValue : String = "";
-    let viewingContact : Contact|null = null;
+    let viewingContact : Contact|null = $state(null);
+    
+    let searchValue : string = $state("");
+    const filteredContacts = $derived.by(() => {
+        const filterValue = searchValue.toLowerCase();
+        return contacts.values().filter(contact => contact.name.toLowerCase().includes(filterValue));
+    })
 
     function showContact(contact : Contact) {
         console.log(`Showing contact ${contact}`)
@@ -52,14 +58,14 @@
 </style>
 
 <div class="container">
-
     <div class="scroll {viewingContact ? 'wide' : ''}">
         {#if viewingContact}
             <ContactProfile contact={viewingContact} />
         {:else}
-            <ContactList contactSelected={showContact} />
+            <ContactList contactSelected={showContact} contacts={filteredContacts} />
         {/if}
     </div>
 </div>
 
 <input type="search" class="searchbox {viewingContact ? 'thin' : ''}" name="searchBox" placeholder="Search for contacts..." bind:value={searchValue}>
+

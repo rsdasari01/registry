@@ -77,8 +77,5 @@
         {#if contact.address}<p>Address: {contact.address}</p>{/if}
     {/if}
 
-    <p>yeebedi yebedi</p>
     <button class="edit" onclick={() => {editable = !editable}}>Edit</button>
-
-
 </div>
