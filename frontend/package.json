@@ -32,5 +32,8 @@
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
+	},
+	"dependencies": {
+		"uuid": "^11.0.5"
 	}
 }
