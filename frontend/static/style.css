@@ -1,0 +1,14 @@
+@font-face {
+    font-family: "Bagnard";
+    src: url(/fonts/Bagnard.otf) format("opentype");
+}
+
+:root {
+    font-family: "Inter", "Arial", sans-serif;
+    font-size: 16px;
+}
+
+html, body {
+    margin: 0;
+    height: 100%; 
+}
