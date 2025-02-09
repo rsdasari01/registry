@@ -1,6 +1,7 @@
 export interface Contact {
     uuid: UUID;
     name: string;
+    picture: string;
     relation? : string;
     employer? : string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

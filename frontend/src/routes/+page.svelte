@@ -1,20 +1,22 @@
 <script lang="ts">
-    import Contact from "$lib/components/Contact.svelte";
-    import type { UUID } from "$lib/contacts/Contact";
-    import contacts from "$lib/contacts/Contacts";
+    import ContactList from "$lib/components/ContactList.svelte";
+    import ContactProfile from "$lib/components/ContactProfile.svelte";
+    import type { Contact } from "$lib/contacts/Contact";
 
     let searchValue : String = "";
+    let viewingContact : Contact|null = null;
 
-    const id = "text" as UUID;
-
-
+    function showContact(contact : Contact) {
+        console.log(`Showing contact ${contact}`)
+        viewingContact = contact;
+    }
 
 </script>
 
 <style lang="scss">
     .scroll {
         position: fixed;
-        height: 95%;
+        display: flex;
         top: 5%;
         left: 5%;
         width: 30%;
@@ -22,13 +24,13 @@
         border: 3px solid black;
         background: #E0C9A6;
         max-width: 25rem;
-        
-        .contactList {
-            height: 100%;
-            padding: 0;
-            overflow-y: scroll;
-            overflow-x: hidden;
-            list-style: none;
+        overflow-x: hidden;
+
+        transition: width 500ms, max-width 500ms;
+
+        &.wide {
+            width: 50%;
+            max-width: 60rem;
         }
     }
 
@@ -41,20 +43,23 @@
         right: 5%;
         border: 3px solid black;
         border-radius: .2rem;
+        transition: width 500ms;
+
+        &.thin {
+            width: 35%;
+        }
     }
 </style>
 
 <div class="container">
 
-    <div class="scroll">
-        <ul class="contactList">
-            {#each contacts.values() as contact}
-                <Contact {contact} />
-            {/each}
-                <!-- {#each {length: 50}} -->
-            <!-- {/each} -->
-        </ul>
+    <div class="scroll {viewingContact ? 'wide' : ''}">
+        {#if viewingContact}
+            <ContactProfile contact={viewingContact} />
+        {:else}
+            <ContactList contactSelected={showContact} />
+        {/if}
     </div>
 </div>
 
-<input type="search" class="searchbox" name="searchBox" placeholder="Search for contacts..." bind:value={searchValue}>
+<input type="search" class="searchbox {viewingContact ? 'thin' : ''}" name="searchBox" placeholder="Search for contacts..." bind:value={searchValue}>

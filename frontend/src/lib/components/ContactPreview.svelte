@@ -44,18 +44,20 @@
 
 <script lang="ts">
     import type { Contact } from "$lib/contacts/Contact";
+    import type { MouseEventHandler } from "svelte/elements";
 
-    let { contact } : {contact : Contact} = $props();
+    let { contact, onclick } : {contact : Contact, onclick ?: MouseEventHandler<HTMLButtonElement>} = $props();
 </script>
 
-<button class="contact">
+<button class="contact" {onclick}>
     {#if true}
-        <img src="https://picsum.photos/512/512" alt="Image of {contact.name}" width=64 height=64>
+        <img src={contact.picture} alt="Image of {contact.name}" width=64 height=64>
     {/if}
     <div class="info">
         <h3>{contact.name}</h3>
 
         <div class="tiny">
+            <!-- Use all of the object values and sort as relation, employer, etc. -->
             <p>{contact.relation}</p>
             <p>{contact.employer}</p>
         </div>
