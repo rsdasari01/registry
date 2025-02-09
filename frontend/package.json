@@ -32,5 +32,10 @@
 		"onlyBuiltDependencies": [
 			"esbuild"
 		]
+	},
+	"dependencies": {
+		"graphology": "^0.26.0",
+		"sigma": "^3.0.1",
+		"uuid": "^11.0.5"
 	}
 }

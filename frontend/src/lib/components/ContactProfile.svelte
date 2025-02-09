@@ -1,14 +1,34 @@
 <script lang="ts">
-    import type { Contact } from "$lib/contacts/Contact";
-    import { fade, slide } from "svelte/transition";
+    import { createNewContact, type Contact, type UUID } from "$lib/contacts/Contact";
+    import contacts from "$lib/contacts/Contacts";
+    import { fade } from "svelte/transition";
+    import ContactPreview from "./ContactPreview.svelte";
+    import { onMount } from "svelte";
 
-    const {contact} : {contact : Contact} = $props();
+    const {contact, changeContact, Graph} : {contact : Contact, changeContact : CallableFunction, Graph? : typeof import("$lib/graph/Graph")} = $props();
 
-    let editable = $state(false);
+    let editable = $state(contact.name == "");
+
+    let addRelationUUID : UUID|null = null;
+
+    $effect(() => {
+        if (!editable) {
+            // Save changes to contact
+            contacts.set(contact.uuid, contact);
+            Graph?.updateContact(contact);
+        }
+    })
 
     function changeProfilePicture() {
 
     }
+
+    function removeRelation(uuid : UUID) {
+        contact.relations.splice(contact.relations.indexOf(uuid), 1);
+        Graph?.removeConnection(contact.uuid, uuid);
+    }
+
+
 
 </script>
 
@@ -18,7 +38,7 @@
 
         .overview {
             display: grid;
-            grid-template-columns: 1fr 6fr;
+            grid-template-columns: 1fr 6fr 1fr;
             gap: 2rem;
             align-items: center;
 
@@ -28,6 +48,10 @@
                 gap: 2rem;
             }
         }
+    }
+
+    .close {
+        // margin-bottom: 3rem;
     }
 
     button {
@@ -40,6 +64,27 @@
         background: pink;
         padding: 1rem;
         cursor: pointer;
+        bottom: 3rem;
+    }
+
+    .relations {
+        .relation {
+            display: grid;
+            grid-template-columns: 1fr;
+
+            &.removable {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+    }
+
+    .closeButton {
+        font-size: 2rem;
+        cursor: pointer;
+
+        &:hover {
+            background: #C7B291;
+        }
     }
 </style>
 
@@ -65,6 +110,7 @@
                 {/if}
             </span>
         </div>
+        <button class="close closeButton" tabindex="1" onclick={() => {editable = false; changeContact(null)}}>✖</button>
     </div>
 
     {#if editable}
@@ -77,8 +123,28 @@
         {#if contact.address}<p>Address: {contact.address}</p>{/if}
     {/if}
 
-    <p>yeebedi yebedi</p>
-    <button class="edit" onclick={() => {editable = !editable}}>Edit</button>
+    <div class="relations">
+
+        <h2>Relations</h2>
+        {#each contact.relations as relation}
+            <div class="relation {editable ? 'removable' : ''}">
+                <ContactPreview contact={contacts.get(relation) ?? createNewContact()} onclick={() => {changeContact(contacts.get(relation))}} />
+                {#if editable}<button class="remove closeButton" onclick={() => {removeRelation(relation)}}>✖</button>{/if}
+            </div>
+        {/each}
+        {#if editable}
+            <div>
+                <select name="addRelation" bind:value={addRelationUUID}>
+                    {#each contacts.values().filter((otherContact : Contact) => otherContact !== contact && !contact.relations.includes(otherContact.uuid)) as otherContact}
+                        <option value={otherContact.uuid}>{otherContact.name}</option>
+                    {/each}
+                </select>
+                <button onclick={() => {if (!addRelationUUID) return; contact.relations.push(addRelationUUID); addRelationUUID = null}}>Add</button>
+            </div>
+        {/if}
+
+    </div>
 
 
+    <button class="edit" onclick={() => {editable = !editable; }}>Edit</button>
 </div>

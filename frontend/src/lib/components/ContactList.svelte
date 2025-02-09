@@ -1,9 +1,9 @@
 <script lang="ts">
     import ContactPreview from "$lib/components/ContactPreview.svelte";
-    import contacts from "$lib/contacts/Contacts";
     import { fade } from "svelte/transition";
+    import type { Contact } from "$lib/contacts/Contact";
 
-    const {contactSelected} : {contactSelected : CallableFunction} = $props();
+    const {contacts, contactSelected} : {contacts : Iterable<Contact>, contactSelected : CallableFunction} = $props();
 </script>
 
 <style>
@@ -16,7 +16,7 @@
 </style>
 
 <ul class="contactList" transition:fade>
-    {#each contacts.values() as contact}
+    {#each contacts as contact}
         <ContactPreview {contact} onclick={() => {contactSelected(contact)}} />
     {/each}
 </ul>
