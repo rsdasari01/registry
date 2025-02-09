@@ -3,8 +3,9 @@
     import contacts from "$lib/contacts/Contacts";
     import { fade } from "svelte/transition";
     import ContactPreview from "./ContactPreview.svelte";
+    import { onMount } from "svelte";
 
-    const {contact, changeContact} : {contact : Contact, changeContact : CallableFunction} = $props();
+    const {contact, changeContact, Graph} : {contact : Contact, changeContact : CallableFunction, Graph? : typeof import("$lib/graph/Graph")} = $props();
 
     let editable = $state(contact.name == "");
 
@@ -14,6 +15,7 @@
         if (!editable) {
             // Save changes to contact
             contacts.set(contact.uuid, contact);
+            Graph?.updateContact(contact);
         }
     })
 
@@ -23,6 +25,7 @@
 
     function removeRelation(uuid : UUID) {
         contact.relations.splice(contact.relations.indexOf(uuid), 1);
+        Graph?.removeConnection(contact.uuid, uuid);
     }
 
 

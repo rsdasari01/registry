@@ -3,12 +3,13 @@ import Sigma from "sigma"
 import contacts from "$lib/contacts/Contacts";
 import type { Contact, UUID } from "$lib/contacts/Contact";
 
+export let graph : Graph
 export let sigmaInstance : Sigma;
 
 let highlightedNode : string|null = null;
 
 export function createGraph(containerElem : HTMLDivElement) {
-    const graph = new Graph(); 
+    graph = new Graph(); 
     graph.addNode("You", {label: "You", x: 0, y: 0, size: 10, color: "blue"});
     
     contacts.forEach((contact, uuid) => {
@@ -25,20 +26,22 @@ export function createGraph(containerElem : HTMLDivElement) {
 }
 
 export function removeConnection(fromUUID : UUID, toUUID : UUID) {
-    sigmaInstance.getGraph().dropDirectedEdge(fromUUID, toUUID);
+    if (graph.hasDirectedEdge(fromUUID, toUUID)) {
+        graph.dropDirectedEdge(fromUUID, toUUID);
+    }
 }
 
 export function removeContact(contact : Contact) {
-    sigmaInstance.getGraph().dropNode(contact.uuid);
+    if (graph.hasNode(contact.uuid)) {
+        graph.dropNode(contact.uuid);
+    }
 }
 
 export function addContact(contact : Contact) {
-    sigmaInstance.getGraph().addNode(contact.uuid, {x: Math.random()*5, y: Math.random()*5, label: contact.name, size: 10, color: "black"})
+    graph.addNode(contact.uuid, {x: Math.random()*5, y: Math.random()*5, label: contact.name, size: 10, color: "black"})
 }
 
 export function highlightContact(contact : Contact|null) {
-    const graph = sigmaInstance.getGraph()
-    
     if (highlightedNode) graph.removeNodeAttribute(highlightedNode, "highlighted");
     highlightedNode = contact ? contact.uuid : null;
     
@@ -52,15 +55,15 @@ export function highlightContact(contact : Contact|null) {
 }
 
 export function updateContact(contact : Contact) {
-    const graph = sigmaInstance.getGraph();
-
     if (graph.getNodeAttribute(contact.uuid, "label") != contact.name) {
         graph.setNodeAttribute(contact.uuid, "label", contact.name);
     }
 
     contacts.forEach((contact, uuid) => {
         for (const relation of contact.relations) {
-            graph.addDirectedEdge(uuid, relation, {color: "black", size: 5, type: "arrow"});
+            if (!graph.hasDirectedEdge(uuid, relation)) {
+                graph.addDirectedEdge(uuid, relation, {color: "black", size: 5, type: "arrow"});
+            }
         }
     })
     // const connectedEdges : string[] = graph.outboundEdges(contact.uuid);

@@ -101,17 +101,17 @@
 <div class="container">
     <div class="scroll {viewingContact ? 'wide' : ''}">
         {#if viewingContact}
-            <ContactProfile contact={viewingContact} changeContact={(contact : Contact|null) => {viewingContact = contact; Graph.highlightContact(contact)}} />
+            <ContactProfile contact={viewingContact} changeContact={(contact : Contact|null) => {viewingContact = contact; Graph.highlightContact(contact)}} {Graph} />
         {:else}
-            <ContactList contactSelected={(contact : Contact) => {viewingContact = contact; Graph.highlightContact(contact)}} contacts={filteredContacts} />
+            <ContactList contacts={filteredContacts} contactSelected={(contact : Contact) => {viewingContact = contact; Graph.highlightContact(contact)}} />
         {/if}
     </div>
 </div>
 
+<!-- FIXME: When you click on a search while editing you can create a null node in the graph -->
 <input type="search" oninput={() => {viewingContact = null}} class="searchbox {viewingContact ? 'thin' : ''}" name="searchBox" placeholder="Search for contacts..." bind:value={searchValue}>
 
-<!-- <button class="add" onclick={() => {viewingContact = createNewContact()}}>🖋</button> -->
-<button class="add" onclick={() => {Graph.updateContact(contacts.get("UUID2" as UUID))}}>🖋</button>
+<button class="add" onclick={() => {viewingContact = createNewContact(); Graph.addContact(viewingContact)}}>🖋</button>
 
 <!-- <div class="map" /> -->
 <div class="map">
