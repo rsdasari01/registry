@@ -1,0 +1,9 @@
+[project]
+name = "potters-registry"
+version = "0.0.1"
+dependencies = [
+    "flask",
+    "flask_jwt_extended",
+    "openai",
+    "werkzeug"
+]
