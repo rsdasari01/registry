@@ -18,71 +18,47 @@ openai.api_key = OPENAI_API_KEY
 
 jwt = JWTManager(app)
 
-# Load users from JSON file
-try:
-    with open("users.json", "r") as openfile:
-        users_list = json.load(openfile)
-except (FileNotFoundError, json.JSONDecodeError):
-    users_list = {}
 
-class User:
-    def __init__(self, username, password, new_user=True):
+class User(object):
+
+    username : str
+    hashed_password : str
+
+    def __init__(self, username : str, password : str, contacts : dict[str, object] = {}):
         self.username = username
-        self.password = hashlib.sha256(password.encode()).hexdigest()
-        if new_user:
-            self.contacts = {}
-            self.relations = []
-            users_list[self.username] = self.to_dict()
-            self.save_to_file()
+        self.hashed_password = hashlib.sha256(password.encode()).hexdigest()
+        self.contacts = contacts
 
-    def to_dict(self):
-        return {
-            "username": self.username,
-            "password": self.password,
-            "contacts": self.contacts,
-            "relations": self.relations
-        }
+    def check_password(self, password) -> bool:
+        return self.hashed_password == hashlib.sha256(password.encode()).hexdigest()
 
-    def save_to_file(self):
-        with open("users.json", "w") as outfile:
-            json.dump(users_list, outfile, indent=4)
 
-    def add_contact(self, name, phone, email, address, profile_picture=None, relations=None):
-        if relations is None:
-            relations = []
-        contact_uuid = str(uuid.uuid4())
-        self.contacts[contact_uuid] = {
-            'name': name,
-            'phone': phone,
-            'email': email,
-            'address': address,
-            'profile_picture': profile_picture,  # Store processed fantasy image URL
-            'relations': relations           
-        }
-        self.save_to_file()
-        return contact_uuid
+
+# Variable setup
+users_list : dict[str, User] = {}
+
 # ** Authentication Routes **
 
 @app.route('/register', methods=['POST'])
 def register():
-    data = request.json
+    data : dict[str, object] = request.json
     username = data.get("username")
     password = data.get("password")
 
     if username in users_list:
         return jsonify({"message": "User already exists"}), 400
 
-    User(username, password)
+    users_list[username] = User(username, password)
     return jsonify({"message": "User registered successfully"}), 201
 
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.json
+    data : dict[str, object] = request.json
     username = data.get("username")
     password = data.get("password")
 
-    if username not in users_list or not User(username, users_list[username]["password"], new_user=False).check_password(password):
+    if username not in users_list or not users_list[username].check_password(password):
         return jsonify({"message": "Invalid username or password"}), 401
 
     access_token = create_access_token(identity=username)
@@ -95,14 +71,14 @@ def login():
 @jwt_required()
 def get_contacts():
     username = get_jwt_identity()
-    return jsonify(users_list[username]["contacts"])
+    return jsonify(users_list[username].contacts)
 
 
 @app.route('/contacts/<string:contact_uuid>', methods=['GET'])
 @jwt_required()
-def get_contact(contact_uuid):
+def get_contact(contact_uuid : str):
     username = get_jwt_identity()
-    contact = users_list[username]["contacts"].get(contact_uuid)
+    contact = users_list[username].contacts.get(contact_uuid)
     if contact:
         return jsonify(contact)
     return jsonify({"message": "Contact not found"}), 404
@@ -110,48 +86,27 @@ def get_contact(contact_uuid):
 
 @app.route('/contacts', methods=['POST'])
 @jwt_required()
-def add_contact():
+def update_contact():
     username = get_jwt_identity()
-    data = request.json
-    name = data.get("name")
-    phone = data.get("phone")
-    email = data.get("email")
-    address = data.get("address")
-    relations = data.get("relations", [])
+    data : dict[str, object] = request.json
+    uuid = data.get("uuid")
+    print(data)
 
-    user = User(username, users_list[username]["password"], new_user=False)
-    contact_uuid = user.add_contact(name, phone, email, address, relations)
-    
-    return jsonify({"message": "Contact added successfully", "uuid": contact_uuid}), 201
+    users_list[username].contacts[uuid] = data
 
-
-@app.route('/contacts/<string:contact_uuid>', methods=['PUT'])
-@jwt_required()
-def update_contact(contact_uuid):
-    username = get_jwt_identity()
-    data = request.json
-    phone = data.get("phone")
-    email = data.get("email")
-    address = data.get("address")
-    relations = data.get("relations")
-
-    user = User(username, users_list[username]["password"], new_user=False)
-    success = user.update_contact(contact_uuid, phone, email, address, relations)
-
-    if success:
-        return jsonify({"message": "Contact updated successfully"}), 200
-    return jsonify({"message": "Contact not found"}), 404
+    return jsonify({"message": "Contact added successfully"}), 201
 
 
 @app.route('/contacts/<string:contact_uuid>', methods=['DELETE'])
 @jwt_required()
 def delete_contact(contact_uuid):
     username = get_jwt_identity()
-    user = User(username, users_list[username]["password"], new_user=False)
-    success = user.delete_contact(contact_uuid)
+    user = users_list[username]
 
-    if success:
+    if user.contacts.get(contact_uuid):
+        del user.contacts[contact_uuid]
         return jsonify({"message": "Contact deleted successfully"}), 200
+
     return jsonify({"message": "Contact not found"}), 404
 
 
@@ -230,7 +185,7 @@ def upload_profile_picture(contact_uuid):
         if response and "data" in response and len(response["data"]) > 0:
             fantasy_image_url = response["data"][0]["url"]
             user.contacts[contact_uuid]['profile_picture'] = fantasy_image_url
-            user.save_to_file()
+            # user.save_to_file()
 
             return jsonify({
                 "message": "Profile picture updated",
