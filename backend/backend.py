@@ -1,15 +1,15 @@
-import uuid
 import hashlib
-import json
 import os
 import openai  # OpenAI API for image processing
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "your_secret_key_here"  # Change this to a strong key
 app.config["UPLOAD_FOLDER"] = "uploads"  # Folder to store uploaded images
+cors = CORS(app)
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 # OpenAI API Key (replace with your actual key)
@@ -38,6 +38,10 @@ class User(object):
 users_list : dict[str, User] = {}
 
 # ** Authentication Routes **
+@app.route('/', methods=['OPTIONS'])
+def cors():
+    return jsonify(), 200
+
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -71,6 +75,7 @@ def login():
 @jwt_required()
 def get_contacts():
     username = get_jwt_identity()
+    print(username)
     return jsonify(users_list[username].contacts), 200
 
 
@@ -88,6 +93,7 @@ def get_contact(contact_uuid : str):
 @jwt_required()
 def update_contact():
     username = get_jwt_identity()
+    print(f"{username} updating")
     data : dict[str, object] = request.json
     uuid = data.get("uuid")
     print(data)
@@ -110,7 +116,6 @@ def delete_contact(contact_uuid):
     return jsonify({"message": "Contact not found"}), 404
 
 
-# ** New Route: Smart Contact Sync **
 @app.route('/contacts/sync', methods=['POST'])
 @jwt_required()
 def sync_contacts():
@@ -120,24 +125,21 @@ def sync_contacts():
     if not isinstance(new_contact_list, dict):
         return jsonify({"message": "Invalid data format"}), 400
 
-    user = User(username, users_list[username]["password"], new_user=False)
-    
+    user = users_list[username]
+
     # Detect changes and update only modified contacts
     updated = 0
     for contact_uuid, new_contact in new_contact_list.items():
         if contact_uuid in user.contacts:
             current_contact = user.contacts[contact_uuid]
             if current_contact != new_contact:
-                user.update_contact(contact_uuid, 
-                                    phone=new_contact.get("phone"),
-                                    email=new_contact.get("email"),
-                                    address=new_contact.get("address"),
-                                    relations=new_contact.get("relations"))
+                user.contacts[contact_uuid] = new_contact
                 updated += 1
 
     if updated > 0:
         return jsonify({"message": f"{updated} contacts updated successfully"}), 200
     return jsonify({"message": "No changes detected"}), 200
+
 
 
 if __name__ == '__main__':
