@@ -2,7 +2,9 @@
     import ContactList from "$lib/components/ContactList.svelte";
     import ContactProfile from "$lib/components/ContactProfile.svelte";
     import contacts from "$lib/contacts/Contacts";
-    import { createNewContact, type Contact } from "$lib/contacts/Contact";
+    import { createNewContact, type Contact, type UUID } from "$lib/contacts/Contact";
+    import ContactGraph from "$lib/components/ContactGraph.svelte";    
+    import { onMount } from "svelte";
 
     let viewingContact : Contact|null = $state(null);
     
@@ -13,9 +15,19 @@
         return contacts.values().filter(contact => contact.name.toLowerCase().includes(filterValue));
     })
 
+    let Graph : typeof import("$lib/graph/Graph");
+
+    onMount(async () => {
+        Graph = await import ("$lib/graph/Graph");
+    })
+
 </script>
 
 <style lang="scss">
+    * {
+        z-index: 1;
+    }
+
     .scroll {
         position: fixed;
         display: flex;
@@ -76,8 +88,7 @@
     }
 
     .map {
-        z-index: -1;
-        background-color: turquoise;
+        z-index: 0;
         margin: 0;
         top: 0;
         bottom: 0;
@@ -90,15 +101,20 @@
 <div class="container">
     <div class="scroll {viewingContact ? 'wide' : ''}">
         {#if viewingContact}
-            <ContactProfile contact={viewingContact} changeContact={(contact : Contact|null) => {viewingContact = contact}} />
+            <ContactProfile contact={viewingContact} changeContact={(contact : Contact|null) => {viewingContact = contact; Graph.highlightContact(contact)}} />
         {:else}
-            <ContactList contactSelected={(contact : Contact) => {viewingContact = contact}} contacts={filteredContacts} />
+            <ContactList contactSelected={(contact : Contact) => {viewingContact = contact; Graph.highlightContact(contact)}} contacts={filteredContacts} />
         {/if}
     </div>
 </div>
 
 <input type="search" oninput={() => {viewingContact = null}} class="searchbox {viewingContact ? 'thin' : ''}" name="searchBox" placeholder="Search for contacts..." bind:value={searchValue}>
 
-<button class="add" onclick={() => {viewingContact = createNewContact()}}>🖋</button>
+<!-- <button class="add" onclick={() => {viewingContact = createNewContact()}}>🖋</button> -->
+<button class="add" onclick={() => {Graph.updateContact(contacts.get("UUID2" as UUID))}}>🖋</button>
 
-<div class="map" />
+<!-- <div class="map" /> -->
+<div class="map">
+    <ContactGraph />
+
+</div>
