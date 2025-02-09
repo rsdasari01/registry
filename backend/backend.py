@@ -110,7 +110,6 @@ def delete_contact(contact_uuid):
     return jsonify({"message": "Contact not found"}), 404
 
 
-# ** New Route: Smart Contact Sync **
 @app.route('/contacts/sync', methods=['POST'])
 @jwt_required()
 def sync_contacts():
@@ -120,24 +119,21 @@ def sync_contacts():
     if not isinstance(new_contact_list, dict):
         return jsonify({"message": "Invalid data format"}), 400
 
-    user = User(username, users_list[username]["password"], new_user=False)
-    
+    user = users_list[username]
+
     # Detect changes and update only modified contacts
     updated = 0
     for contact_uuid, new_contact in new_contact_list.items():
         if contact_uuid in user.contacts:
             current_contact = user.contacts[contact_uuid]
             if current_contact != new_contact:
-                user.update_contact(contact_uuid, 
-                                    phone=new_contact.get("phone"),
-                                    email=new_contact.get("email"),
-                                    address=new_contact.get("address"),
-                                    relations=new_contact.get("relations"))
+                user.contacts[contact_uuid] = new_contact
                 updated += 1
 
     if updated > 0:
         return jsonify({"message": f"{updated} contacts updated successfully"}), 200
     return jsonify({"message": "No changes detected"}), 200
+
 
 
 if __name__ == '__main__':
